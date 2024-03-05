@@ -18,13 +18,13 @@ package org.jboss.as.quickstarts.ejb_security;
 
 import java.security.Principal;
 
-import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.Remote;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
+import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Simple secured EJB using EJB security annotations
@@ -38,25 +38,27 @@ import org.jboss.ejb3.annotation.SecurityDomain;
  * security domain. This example uses the "other" security domain which is provided by default in the standalone.xml file.
  *
  */
-@Stateless
-@Remote(SecuredEJBRemote.class)
+@Path("/")
 @RolesAllowed({ "guest" })
-@SecurityDomain("other")
-public class SecuredEJB implements SecuredEJBRemote {
+public class SecuredService {
 
-    // Inject the Session Context
-    @Resource
-    private SessionContext ctx;
+    @Inject
+    SecurityIdentity identity;
 
     /**
      * Secured EJB method using security annotations
      */
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/securityInfo")
     public String getSecurityInfo() {
-        // Session context injected using the resource annotation
-        Principal principal = ctx.getCallerPrincipal();
-        return principal.toString();
+        Principal principal = identity.getPrincipal();
+        return principal.getName();
     }
 
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/admin")
     @RolesAllowed("admin")
     public boolean administrativeMethod() {
         return true;

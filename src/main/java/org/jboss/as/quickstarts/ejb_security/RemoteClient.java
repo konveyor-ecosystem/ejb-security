@@ -16,11 +16,14 @@
  */
 package org.jboss.as.quickstarts.ejb_security;
 
-import java.util.Hashtable;
+import java.util.Base64;
 
-import javax.ejb.EJBAccessException;
-import javax.naming.Context;
-import javax.naming.InitialContext;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import io.quarkus.logging.Log;
+import io.quarkus.runtime.QuarkusApplication;
+import io.quarkus.runtime.annotations.QuarkusMain;
+import jakarta.ws.rs.WebApplicationException;
 
 /**
  * The remote client responsible for making invoking the intermediate bean to demonstrate security context propagation
@@ -28,28 +31,29 @@ import javax.naming.InitialContext;
  *
  * @author <a href="mailto:sguilhen@redhat.com">Stefan Guilhen</a>
  */
-public class RemoteClient {
+@QuarkusMain
+public class RemoteClient implements QuarkusApplication {
 
-    public static void main(String[] args) throws Exception {
+    @RestClient
+    SecuredServiceClient securedServiceClient;
 
-        final Hashtable<String, String> jndiProperties = new Hashtable<>();
-        //jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
-        jndiProperties.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
-        jndiProperties.put(Context.PROVIDER_URL, "remote+http://localhost:8080");
-        final Context context = new InitialContext(jndiProperties);
 
-        SecuredEJBRemote reference = (SecuredEJBRemote) context.lookup("ejb:/ejb-security/SecuredEJB!"
-                + SecuredEJBRemote.class.getName());
+    @Override
+    public int run(String... args) throws Exception {
+        Log.info("\n\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n");
+        Log.info("Successfully called secured bean, caller principal "
+                + securedServiceClient.getSecurityInfo());
 
-        System.out.println("\n\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n");
-        System.out.println("Successfully called secured bean, caller principal " + reference.getSecurityInfo());
-        boolean hasAdminPermission = false;
         try {
-            hasAdminPermission = reference.administrativeMethod();
-        } catch (EJBAccessException e) {
+            boolean hasAdminPermission = false;
+            hasAdminPermission = securedServiceClient.administrativeMethod();
+            Log.info("\nPrincipal has admin permission: " + hasAdminPermission);
+        } catch (WebApplicationException we) {
+            Log.info("Unauthorized, as expected");
         }
-        System.out.println("\nPrincipal has admin permission: " + hasAdminPermission);
-        System.out.println("\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n\n");
-    }
 
+        Log.info("\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n\n");
+
+        return 0;
+    }
 }

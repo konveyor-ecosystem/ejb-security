@@ -17,20 +17,13 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.jboss.eap.quickstarts</groupId>
-        <artifactId>quickstart-parent</artifactId>
-        <!--
-        Maintain separation between the artifact id and the version to help prevent
-        merge conflicts between commits changing the GA and those changing the V.
-        -->
-        <version>7.4.0.GA</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+
+    <groupId>org.jboss.eap.quickstarts</groupId>
     <artifactId>ejb-security</artifactId>
+    <version>quarkus</version>
     <packaging>jar</packaging>
-    <name>Quickstart: ejb-security</name>
-    <description>This project demonstrates EJB Security</description>
+    <name>Quickstart: ejb-security-to-quarkus-basic-elytron</name>
+    <description>This project demonstrates how to migrate Remote EJBs secured through Elytron to Quarkus</description>
 
     <licenses>
         <license>
@@ -40,38 +33,60 @@
         </license>
     </licenses>
 
+    <properties>
+        <maven.compiler.release>11</maven.compiler.release>
+        <quarkus.platform.version>3.6.6</quarkus.platform.version>
+        <compiler-plugin.version>3.11.0</compiler-plugin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus.platform</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-        <!-- The EJB Client BOM provides application server-compatible dependency management,
-        used for building, testing or debugging EJB client applications. Import the BOM to the
-        dependency management section of the app's pom.xml file and then set dependencies on specific artifacts.
-        Alternatively, as shown in the following example, set a single dependency on the BOM for the app to depend
-        on all the artifacts it manages.
-        -->
         <dependency>
-            <groupId>org.jboss.eap</groupId>
-            <artifactId>wildfly-ejb-client-bom</artifactId>
-            <type>pom</type>
-            <scope>compile</scope>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-reactive</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.ejb3</groupId>
-            <artifactId>jboss-ejb3-ext-api</artifactId>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-elytron-security-properties-file</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.spec.javax.ejb</groupId>
-            <artifactId>jboss-ejb-api_3.2_spec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.annotation</groupId>
-            <artifactId>jboss-annotations-api_1.3_spec</artifactId>
-            <scope>provided</scope>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client-reactive</artifactId>
         </dependency>
     </dependencies>
+
     <build>
-        <!-- Set the name of the WAR, used as the context root when the app is deployed -->
         <finalName>${project.artifactId}</finalName>
         <plugins>
-
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>io.quarkus.platform</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-ejb-plugin</artifactId>
